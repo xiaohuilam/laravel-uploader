@@ -12,7 +12,7 @@ composer require sunnyshift/laravel-uploader
 ## 添加服务提供者
 
 ```php
-SunnyShift\LaravelUploader\UploadServiceProvider::class,
+SunnyShift\Uploader\UploaderServiceProvider::class,
 ```
 
 ## 生成资源文件

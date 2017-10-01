@@ -1,15 +1,15 @@
 <?php
-namespace SunnyShift\LaravelUploader\Http\Controllers;
+namespace SunnyShift\Uploader\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
-use SunnyShift\LaravelUploader\Services\FileUpload;
+use SunnyShift\Uploader\Services\FileUpload;
 
 class UploaderController extends BaseController
 {
     public function upload(Request $request, FileUpload $fileUpload){
         $inputName = 'file';
-        $directory = '{Y}/{m}/{d}';
+        $directory = $request->input('dir');
         $disk = config('filesystems.default', 'public');
         if (!$request->hasFile($inputName)) {
             return [

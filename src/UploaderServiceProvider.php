@@ -1,29 +1,53 @@
 <?php
-namespace SunnyShift\LaravelUploader;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\ServiceProvider;
-use SunnyShift\LaravelUploader\Services\FileUpload;
+namespace SunnyShift\Uploader;
 
-/**
- * Created by PhpStorm.
- * User: sunnyshift
- * Date: 17-8-3
- * Time: 下午2:06
- */
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
+use SunnyShift\Uploader\Adapter\OSS;
+use SunnyShift\Uploader\Adapter\Upyun;
+use SunnyShift\Uploader\Services\FileUpload;
+use SunnyShift\Uploader\Adapter\Local;
+use SunnyShift\Uploader\Adapter\Qiniu;
+
 class UploaderServiceProvider extends ServiceProvider
 {
+    private $adapters = [
+        'public' =>  Local::class,
+        'qiniu'  =>  Qiniu::class,
+        'upyun'  =>  Upyun::class,
+        'oss'    =>  OSS::class
+    ];
+
     public function boot()
     {
         $this->loadRoute();
         $this->loadViews();
         $this->loadAssets();
-        $this->registerServices();
         $this->registerDirective();
+
+        View::share('uploader_options', Uploader::build());
+    }
+
+    public function register(){
+        $this->app->singleton(FileUpload::class, function ($app) {
+            return new FileUpload($app['filesystem']);
+        });
+
+        $this->app->singleton(UploaderManager::class, function (){
+            return new UploaderManager();
+        });
+
+        foreach ($this->adapters as $key => $adapter){
+            Uploader::extend($key, function () use ($adapter){
+                return $this->app->make($adapter);
+            });
+        }
     }
 
     protected function loadRoute(){
         if (! $this->app->routesAreCached()){
-            $this->app->make('router')->post('sunnyshift/upload', __NAMESPACE__.'\Http\Controllers\UploaderController@upload')->name('sunnyshift.upload');
+            $this->app->make('router')->post('sunnyshift/upload', __NAMESPACE__.'\Http\Controllers\UploaderController@upload');
         }
     }
 
@@ -34,13 +58,6 @@ class UploaderServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/uploader'),
         ]);
-    }
-
-    protected function registerServices()
-    {
-        $this->app->singleton(FileUpload::class, function ($app) {
-            return new FileUpload($app['filesystem']);
-        });
     }
 
     protected function loadAssets()
@@ -61,4 +78,5 @@ class UploaderServiceProvider extends ServiceProvider
             }
         });
     }
+
 }

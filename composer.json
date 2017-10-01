@@ -14,8 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SunnyShift\\LaravelUploader\\": "src/LaravelUploader"
-        },
-        "files": ["src/LaravelUploader/helpers.php"]
+            "SunnyShift\\Uploader\\": "src"
+        }
     }
 }
