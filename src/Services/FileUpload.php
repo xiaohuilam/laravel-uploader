@@ -1,6 +1,6 @@
 <?php
 
-namespace SunnyShift\LaravelUploader\Services;
+namespace SunnyShift\Uploader\Services;
 
 use Illuminate\Filesystem\FilesystemManager;
 use Symfony\Component\HttpFoundation\File\UploadedFile;

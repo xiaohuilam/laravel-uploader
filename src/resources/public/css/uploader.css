@@ -49,6 +49,25 @@
 .uploader-list .img-item .error {
     background-color: rgba(255, 0, 0, 0.5);
 }
+.uploader-list .img-item .delete {
+    width: 15px;
+    height: 15px;
+    background: #ff0000;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    opacity: 0.6;
+}
+.uploader-list .img-item .delete:before {
+    content: " ";
+    width: 9px;
+    height: 2px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+}
 .uploader-list .picker {
     border: 1px solid #ccc;
 }

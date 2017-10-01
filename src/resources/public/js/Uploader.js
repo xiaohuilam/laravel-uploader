@@ -9,13 +9,6 @@ Utils.printf = function() {
     }
     return oStr;
 };
-Utils.randomStr = function (length) {
-    var str = '';
-    while (str.length < length){
-        str += Math.random().toString(36).substr(2)
-    }
-    return str.substr(0, length);
-};
 Utils.startsWith = function (needle, str) {
     return str.indexOf(needle) === 0;
 };
@@ -25,22 +18,23 @@ function Uploader(selector) {
 
     this.uploader = null;
 
+    this.currentQty = 0;
+
     this.init = function () {
+        WebUploader.Mediator.installTo(this);
         this.create();
         this.bind();
     };
 
     this.create = function () {
         var _this = this;
-
-        this.uploadUrl = this.getAttr('data-url');
-        this.token = this.getAttr('data-token');
+        this.options = JSON.parse(this.getAttr('data-options'));
         this.name = this.getAttr('data-name');
-        this.max = this.getAttr('data-max');
-        this.extensions = this.getAttr('data-extensions');
+        this.max = parseInt(this.getAttr('data-max'));
+        this.extensions = this.getAttr('data-accept');
 
         this.uploader = WebUploader.create({
-            server: _this.uploadUrl,
+            server: _this.options.url,
             auto : true,
             pick: {
                 id : this.selector.find('.picker'),
@@ -50,48 +44,58 @@ function Uploader(selector) {
             accept : {
                 extensions: this.extensions
             },
-            resize: false
+            resize: false,
+            fileVal : _this.options.fileName
         });
     };
 
     this.bind = function () {
         var _this = this;
-        this.uploader.on( 'uploadBeforeSend', function( block, data ) {
-            var file = block.file;
-
-            if (_this.token !== undefined){
-                data.token = _this.token;
-                data.key = Utils.randomStr(32) + '.' + file.ext;
-            }
+        this.on('qtyChanged', function () {
+            var picker = $('.picker');
+            this.currentQty < this.max ? picker.show() : picker.hide();
         });
-        this.uploader.on('beforeFileQueued', function () {
-            if (_this.uploader.getFiles().length === parseInt(_this.max)){
-                return false;
+
+        $('.uploader-list').on('click', '.delete', function () {
+            $(this).parent().remove();
+            _this.currentQty--;
+            _this.trigger('qtyChanged');
+        });
+        this.uploader.on( 'uploadBeforeSend', function( block, data, headers ) {
+            var file = block.file;
+            var params = _this.options.params;
+            var header = _this.options.header;
+
+            if (params.length !== 0){
+                var keys = Object.keys(params);
+
+                for (var i = 0; i < keys.length; i++){
+                    var val = params[keys[i]].toString();
+                    data[keys[i]] = val.replace('{s_filename}', WebUploader.Base.guid() + '.' + file.ext);
+                }
+            }
+            if (header.length !== 0){
+                var ks = Object.keys(headers);
+                for (var j = 0; j < ks.length; j++){
+                    headers[ks[j]] = params[ks[j]];
+                }
             }
         });
         this.uploader.on('fileQueued', function(file) {
-            console.log(file);
             if (Utils.startsWith('image', file.type)){
-                var _li = '<div id="{0}" class="img-item"><img class="img" src="{1}"><div class="wrapper">0%</div></div>';
+                var _li = '<div id="{0}" class="img-item"><div class="delete"></div><img class="img" src="{1}"><div class="wrapper">0%</div></div>';
                 _this.uploader.makeThumb(file, function(error, src) {
-                    if (error) {
-                        return;
-                    }
+                    if (error) return;
                     _this.selector.find('.picker').before(Utils.printf(_li, file.id, src));
                 }, 75, 75);
             }else{
                 var _li = '<div id="{0}" class="img-item"><p>{1}</p><div class="wrapper">0%</div></div>';
                 _this.selector.find('.picker').before(Utils.printf(_li, file.id, file.ext.toUpperCase()));
             }
-
-            if (_this.uploader.getFiles().length === parseInt(_this.max)){
-                _this.selector.find('.picker').hide();
-            }
         });
 
         this.uploader.on('uploadProgress', function(file, percentage) {
-            var _percent = $('#'+file.id).find('.wrapper');
-            _percent.text( parseInt(percentage * 100) + '%' );
+            $('#'+file.id).find('.wrapper').text( parseInt(percentage * 100) + '%' );
         });
 
         this.uploader.on('uploadSuccess', function(file, response) {
@@ -99,8 +103,11 @@ function Uploader(selector) {
             if (parseInt(_this.max) === 1){
                 _input = _input.replace('[]', '');
             }
-            _this.selector.append(Utils.printf(_input, name, response.key));
+            var filename = response[_this.options.responseKey] || _this.options.params[_this.options.responseKey];
+            _this.selector.find('#'+file.id).append(Utils.printf(_input, _this.name, filename));
             _this.selector.find('#'+file.id).find('.wrapper').hide();
+            _this.currentQty++;
+            _this.trigger('qtyChanged');
         });
 
         this.uploader.on('uploadError', function(file) {
