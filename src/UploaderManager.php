@@ -12,6 +12,8 @@ class UploaderManager
 
     private $supports = [];
 
+    const ADAPTER_PREFIX = 'adapter.';
+
     /**
      * @var UploaderContract
      */
@@ -34,7 +36,7 @@ class UploaderManager
             array_push($this->supports, $key);
         }
 
-        $this->app->instance($key, $driver);
+        $this->app->instance(self::ADAPTER_PREFIX.$key, $driver);
     }
 
     /**
@@ -43,7 +45,7 @@ class UploaderManager
      */
     public function setAdapter($adapter){
         if (!$adapter instanceof UploaderContract){
-            $adapter = $this->app->make($adapter);
+            $adapter = $this->app->make(self::ADAPTER_PREFIX.$adapter);
         }
 
         $this->adapter = $adapter;
