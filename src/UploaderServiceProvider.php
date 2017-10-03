@@ -12,12 +12,6 @@ use SunnyShift\Uploader\Adapter\Qiniu;
 
 class UploaderServiceProvider extends ServiceProvider
 {
-    private $adapters = [
-        'public' =>  Local::class,
-        'qiniu'  =>  Qiniu::class,
-        'upyun'  =>  Upyun::class,
-        'oss'    =>  OSS::class
-    ];
 
     public function boot()
     {
@@ -25,6 +19,8 @@ class UploaderServiceProvider extends ServiceProvider
         $this->loadViews();
         $this->loadAssets();
         $this->registerDirective();
+
+        Uploader::register();
 
         View::share('uploader_options', Uploader::build());
     }
@@ -34,15 +30,9 @@ class UploaderServiceProvider extends ServiceProvider
             return new FileUpload($app['filesystem']);
         });
 
-        $this->app->singleton(UploaderManager::class, function (){
-            return new UploaderManager();
+        $this->app->singleton(UploaderManager::class, function ($app){
+            return new UploaderManager($app->request);
         });
-
-        foreach ($this->adapters as $key => $adapter){
-            Uploader::extend($key, function () use ($adapter){
-                return $this->app->make($adapter);
-            });
-        }
     }
 
     protected function loadRoute(){
