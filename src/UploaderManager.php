@@ -4,7 +4,6 @@ namespace SunnyShift\Uploader;
 use Illuminate\Http\Request;
 use SunnyShift\Uploader\Adapter\Local;
 use SunnyShift\Uploader\Adapter\Qiniu;
-use SunnyShift\Uploader\Adapter\SCS;
 use SunnyShift\Uploader\Adapter\Upyun;
 use SunnyShift\Uploader\Adapter\OSS;
 use SunnyShift\Uploader\Contracts\NotifyContract;
@@ -24,8 +23,7 @@ class UploaderManager
         'public' =>  Local::class,
         'qiniu'  =>  Qiniu::class,
         'upyun'  =>  Upyun::class,
-        'oss'    =>  OSS::class,
-        'scs'    =>  SCS::class
+        'oss'    =>  OSS::class
     ];
 
     private $notifies = [

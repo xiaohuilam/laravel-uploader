@@ -43,6 +43,7 @@ class OSS implements UploaderContract
             'key'               =>  date('Y-m-d').'/{s_filename}',
             'policy'            =>  $policy,
             'signature'         =>  $signature,
+            'callbackUrl'       =>  url('sunnyshift/notify').'?'.http_build_query(['notifier' => 'oss'])
         ];
     }
 
@@ -53,7 +54,7 @@ class OSS implements UploaderContract
 
     public function responseKey(): string
     {
-        return 'Location';
+        return 'key';
     }
 
 }

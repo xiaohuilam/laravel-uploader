@@ -9,23 +9,24 @@ use SunnyShift\Uploader\Adapter\Upyun;
 use SunnyShift\Uploader\Services\FileUpload;
 use SunnyShift\Uploader\Adapter\Local;
 use SunnyShift\Uploader\Adapter\Qiniu;
+use Illuminate\Support\Facades\Route;
 
 class UploaderServiceProvider extends ServiceProvider
 {
 
     public function boot()
     {
-        $this->loadRoute();
-        $this->loadViews();
-        $this->loadAssets();
-        $this->registerDirective();
-
         Uploader::register();
 
         View::share('uploader_options', Uploader::build());
     }
 
     public function register(){
+        $this->loadRoute();
+        $this->loadViews();
+        $this->loadAssets();
+        $this->registerDirective();
+
         $this->app->singleton(FileUpload::class, function ($app) {
             return new FileUpload($app['filesystem']);
         });
@@ -37,8 +38,8 @@ class UploaderServiceProvider extends ServiceProvider
 
     protected function loadRoute(){
         if (! $this->app->routesAreCached()){
-            $this->app->make('router')->post('sunnyshift/upload', __NAMESPACE__.'\Http\Controllers\UploaderController@upload');
-            $this->app->make('router')->post('sunnyshift/notify', __NAMESPACE__.'\Http\Controllers\NotifyController@notify');
+            Route::post('sunnyshift/upload', __NAMESPACE__.'\Http\Controllers\UploaderController@upload')->name('sunnyshift.upload');
+            Route::post('sunnyshift/notify', __NAMESPACE__.'\Http\Controllers\NotifyController@notify')->name('sunnyshift.notify');
         }
     }
 

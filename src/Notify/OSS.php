@@ -56,7 +56,8 @@ class OSS implements NotifyContract
     public function response(): array
     {
         return [
-            'Status'    =>  'Ok'
+            'Status'    =>  'Ok',
+            'key'       =>  $this->request->input('object')
         ];
     }
 
