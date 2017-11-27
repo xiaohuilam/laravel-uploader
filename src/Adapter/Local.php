@@ -21,7 +21,7 @@ class Local implements UploaderContract
 
     public function params() : array {
         return [
-            'dir' => '{Y}/{m}/{d}'
+            'dir' => '{Y}-{m}-{d}'
         ];
     }
 

@@ -27,7 +27,7 @@ class Qiniu implements UploaderContract
         $auth = new Auth($this->config['access_key'], $this->config['secret_key']);
         $token = $auth->uploadToken($this->config['bucket']);
 
-        $key = date('Y-m-d') . '/' . '{s_filename}';
+        $key = date('Y-m-d') .'/{s_filename}';
 
         return compact('token', 'key');
     }

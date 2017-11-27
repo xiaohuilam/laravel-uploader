@@ -24,7 +24,7 @@ class Upyun implements UploaderContract
     public function params() : array {
         $params = [
             'bucket' => $this->config['bucket'],
-            'save-key' => '{year}/{mon}/{day}/{random32}{.suffix}',
+            'save-key' => date('Y-m-d').'/{random32}{.suffix}',
             'expiration' => time() + 3600
         ];
 

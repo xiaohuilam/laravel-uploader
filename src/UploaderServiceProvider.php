@@ -39,7 +39,6 @@ class UploaderServiceProvider extends ServiceProvider
     protected function loadRoute(){
         if (! $this->app->routesAreCached()){
             Route::post('sunnyshift/upload', __NAMESPACE__.'\Http\Controllers\UploaderController@upload')->name('sunnyshift.upload');
-            Route::post('sunnyshift/notify', __NAMESPACE__.'\Http\Controllers\NotifyController@notify')->name('sunnyshift.notify');
         }
     }
 

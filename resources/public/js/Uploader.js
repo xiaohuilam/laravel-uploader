@@ -67,17 +67,18 @@ function Uploader(selector) {
             var header = _this.options.header;
 
             if (params.length !== 0){
-                var keys = Object.keys(params);
+                for (var k in params){
+                    var guid = WebUploader.Base.guid();
+                    data[k] = params[k].toString().replace('{s_filename}', guid + '.' + file.ext);
 
-                for (var i = 0; i < keys.length; i++){
-                    var val = params[keys[i]].toString();
-                    data[keys[i]] = val.replace('{s_filename}', WebUploader.Base.guid() + '.' + file.ext);
+                    if (params[k].toString().indexOf('{s_filename}') !== -1){
+                        _this.options.params[k] = data[k];
+                    }
                 }
             }
             if (header.length !== 0){
-                var ks = Object.keys(headers);
-                for (var j = 0; j < ks.length; j++){
-                    headers[ks[j]] = params[ks[j]];
+                for (var h in header){
+                    headers[h] = header[h];
                 }
             }
         });
@@ -103,11 +104,24 @@ function Uploader(selector) {
             if (parseInt(_this.max) === 1){
                 _input = _input.replace('[]', '');
             }
-            var filename = response[_this.options.responseKey] || _this.options.params[_this.options.responseKey];
-            _this.selector.find('#'+file.id).append(Utils.printf(_input, _this.name, filename));
-            _this.selector.find('#'+file.id).find('.wrapper').hide();
-            _this.currentQty++;
-            _this.trigger('qtyChanged');
+            if (_this.options.responseKey.indexOf('.') !== -1){     //包含
+                var keys = _this.options.responseKey.split('.');
+                var filename = response;
+                keys.map(function (item) {
+                    filename = filename[item];
+                });
+            }else {
+                var filename = response[_this.options.responseKey];
+            }
+            if (filename === undefined){    //尝试从参数中解析
+                filename = _this.options.params[_this.options.responseKey];
+            }
+            if (filename !== undefined){    //尝试从参数中解析
+                _this.selector.find('#'+file.id).append(Utils.printf(_input, _this.name, filename));
+                _this.selector.find('#'+file.id).find('.wrapper').hide();
+                _this.currentQty++;
+                _this.trigger('qtyChanged');
+            }
         });
 
         this.uploader.on('uploadError', function(file) {

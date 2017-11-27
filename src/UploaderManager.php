@@ -2,12 +2,14 @@
 namespace SunnyShift\Uploader;
 
 use Illuminate\Http\Request;
+use SunnyShift\Uploader\Adapter\BOS;
+use SunnyShift\Uploader\Adapter\COS;
 use SunnyShift\Uploader\Adapter\Local;
 use SunnyShift\Uploader\Adapter\Qiniu;
+use SunnyShift\Uploader\Adapter\QOS;
+use SunnyShift\Uploader\Adapter\SCS;
 use SunnyShift\Uploader\Adapter\Upyun;
 use SunnyShift\Uploader\Adapter\OSS;
-use SunnyShift\Uploader\Contracts\NotifyContract;
-use SunnyShift\Uploader\Notify\OSS as OSSNotifier;
 use SunnyShift\Uploader\Contracts\UploaderContract;
 use Exception;
 
@@ -23,11 +25,10 @@ class UploaderManager
         'public' =>  Local::class,
         'qiniu'  =>  Qiniu::class,
         'upyun'  =>  Upyun::class,
-        'oss'    =>  OSS::class
-    ];
-
-    private $notifies = [
-        'oss'   =>  OSSNotifier::class
+        'oss'    =>  OSS::class,
+        'cos'    =>  COS::class,
+        'bos'    =>  BOS::class,
+        'scs'    =>  SCS::class
     ];
 
     public function __construct(Request $request){
@@ -46,16 +47,6 @@ class UploaderManager
         }
 
         $this->adapters[$key] = $driver;
-    }
-
-    public function notifier($key, callable $func){
-        $driver = call_user_func($func, $this->app);
-
-        if (!$driver instanceof NotifyContract){
-            throw new Exception('The adapter must an instance of '.NotifyContract::class);
-        }
-
-        $this->notifies[$key] = $driver;
     }
 
     /**
@@ -85,7 +76,7 @@ class UploaderManager
         return in_array($adapter, $supports);
     }
 
-    public function build(){
+    public function build($jsoned = true){
 
         $adapter = $this->app->make(UploaderContract::class);
 
@@ -99,7 +90,9 @@ class UploaderManager
 
         $responseKey = $adapter->responseKey();
 
-        return json_encode(compact('url', 'header', 'params', 'fileName', 'responseKey'));
+        $res = compact('url', 'header', 'params', 'fileName', 'responseKey');
+
+        return $jsoned ? json_encode($res) : $res;
     }
 
     public function register(){
@@ -111,17 +104,6 @@ class UploaderManager
             $default = 'public';
         }
         $this->setAdapter($default);
-
-        /**
-         * 设置通知者
-         */
-        if ($this->request->has('notifier')){
-            $notifier = $this->request->input('notifier');
-
-            if (in_array($notifier,  array_keys($this->notifies))){
-                $this->app->singleton(NotifyContract::class, $this->notifies[$notifier]);
-            }
-        }
     }
 
 }
